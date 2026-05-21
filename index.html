@@ -148,7 +148,8 @@
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -163,8 +164,8 @@
   --border:rgba(11,3,59,0.1);
 }
 html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--white);overflow-x:hidden}
-h1,h2,h3,h4,.syne{font-family:'Syne',sans-serif}
+body{font-family:'Sora',sans-serif;color:var(--text);background:var(--white);overflow-x:hidden}
+h1,h2,h3,h4,.syne{font-family:'Sora',sans-serif}
 
 /* NAV */
 nav{
@@ -174,7 +175,7 @@ nav{
   background:rgba(0,56,209,0.97);
   backdrop-filter:blur(8px);
 }
-.nav-logo{color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;letter-spacing:-0.02em;text-decoration:none}
+.nav-logo{color:#fff;font-family:'Sora',sans-serif;font-weight:800;font-size:1.25rem;letter-spacing:-0.02em;text-decoration:none}
 .nav-logo span{color:var(--orange)}
 .nav-links{display:flex;align-items:center;gap:2rem}
 .nav-links a{color:rgba(255,255,255,0.75);text-decoration:none;font-size:0.9rem;font-weight:400;transition:color 0.2s}
@@ -243,7 +244,7 @@ nav{
 .btn-primary{
   background:var(--orange);color:#fff;
   padding:0.875rem 2rem;border-radius:4px;
-  font-weight:600;font-size:1rem;font-family:'Syne',sans-serif;
+  font-weight:600;font-size:1rem;font-family:'Sora',sans-serif;
   text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;
   transition:background 0.2s,transform 0.15s;
   border:none;cursor:pointer;
@@ -270,7 +271,7 @@ nav{
   background:var(--navy);border:2px solid var(--blue);
   display:flex;align-items:center;justify-content:center;
   font-size:0.7rem;font-weight:600;color:#fff;
-  margin-left:-10px;font-family:'Syne',sans-serif;
+  margin-left:-10px;font-family:'Sora',sans-serif;
 }
 .proof-avatars span:first-child{margin-left:0}
 .proof-text{font-size:0.82rem;color:rgba(255,255,255,0.65);line-height:1.4}
@@ -291,8 +292,8 @@ nav{
 .stat-card:nth-child(3){animation-delay:-4s}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .stat-card .label{font-size:0.75rem;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.5rem}
-.stat-card .value{font-family:'Syne',sans-serif;font-size:1.75rem;font-weight:800;color:#fff}
-.stat-card .value span{font-size:0.875rem;color:rgba(255,255,255,0.6);font-weight:400;font-family:'DM Sans',sans-serif}
+.stat-card .value{font-family:'Sora',sans-serif;font-size:1.75rem;font-weight:800;color:#fff}
+.stat-card .value span{font-size:0.875rem;color:rgba(255,255,255,0.6);font-weight:400;font-family:'Sora',sans-serif}
 .stat-card .trend{font-size:0.78rem;color:#4ade80;margin-top:0.25rem}
 
 /* LOGO BAR */
@@ -308,7 +309,7 @@ nav{
 }
 @keyframes scroll-logos{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .logo-item{
-  font-family:'Syne',sans-serif;font-weight:700;
+  font-family:'Sora',sans-serif;font-weight:700;
   font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;
   color:rgba(255,255,255,0.35);white-space:nowrap;
 }
@@ -363,7 +364,7 @@ nav{
 .step-num{
   width:56px;height:56px;border-radius:50%;
   background:var(--blue);color:#fff;
-  font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;
+  font-family:'Sora',sans-serif;font-weight:800;font-size:1.1rem;
   display:flex;align-items:center;justify-content:center;
   margin:0 auto 1.25rem;
 }
@@ -419,12 +420,12 @@ nav{
   white-space:nowrap;
 }
 .plan-name{
-  font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;
+  font-family:'Sora',sans-serif;font-weight:700;font-size:1rem;
   letter-spacing:0.05em;text-transform:uppercase;
   color:rgba(255,255,255,0.6);margin-bottom:1rem;
 }
 .plan-price{
-  font-family:'Syne',sans-serif;font-weight:800;
+  font-family:'Sora',sans-serif;font-weight:800;
   font-size:3.25rem;letter-spacing:-0.04em;
   color:#fff;line-height:1;margin-bottom:0.25rem;
 }
@@ -446,7 +447,7 @@ nav{
 .plan-cta{
   display:block;text-align:center;
   padding:0.875rem;border-radius:6px;
-  font-family:'Syne',sans-serif;font-weight:700;font-size:0.925rem;
+  font-family:'Sora',sans-serif;font-weight:700;font-size:0.925rem;
   text-decoration:none;transition:all 0.2s;
   border:1.5px solid rgba(255,255,255,0.25);
   color:#fff;
@@ -483,7 +484,7 @@ nav{
   text-align:center;white-space:nowrap;
 }
 .retainer-pill .r-price{
-  font-family:'Syne',sans-serif;font-weight:800;
+  font-family:'Sora',sans-serif;font-weight:800;
   color:#fff;font-size:1.1rem;display:block;
 }
 .retainer-pill .r-label{
@@ -504,7 +505,7 @@ nav{
   border:1px solid var(--border);
 }
 .result-stat .number{
-  font-family:'Syne',sans-serif;font-size:2.75rem;font-weight:800;
+  font-family:'Sora',sans-serif;font-size:2.75rem;font-weight:800;
   color:var(--blue);letter-spacing:-0.04em;line-height:1;margin-bottom:0.25rem;
 }
 .result-stat .label{font-size:0.85rem;color:var(--muted);line-height:1.4}
@@ -576,7 +577,7 @@ nav{
   background:rgba(255,255,255,0.08);
   border:1px solid rgba(255,255,255,0.15);
   border-radius:6px;color:#fff;font-size:0.9rem;
-  font-family:'DM Sans',sans-serif;
+  font-family:'Sora',sans-serif;
   transition:border-color 0.2s,background 0.2s;
   outline:none;
 }
@@ -594,7 +595,7 @@ nav{
   width:100%;padding:1rem;
   background:var(--orange);color:#fff;
   border:none;border-radius:6px;
-  font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;
+  font-family:'Sora',sans-serif;font-weight:700;font-size:1rem;
   cursor:pointer;transition:background 0.2s,transform 0.1s;
   display:flex;align-items:center;justify-content:center;gap:0.5rem;
 }
@@ -612,7 +613,7 @@ footer{
   margin-bottom:2rem;
 }
 .footer-brand .logo{
-  font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;
+  font-family:'Sora',sans-serif;font-weight:800;font-size:1.25rem;
   color:#fff;margin-bottom:0.5rem;
 }
 .footer-brand .logo span{color:var(--orange)}
