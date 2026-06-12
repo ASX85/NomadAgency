@@ -441,6 +441,11 @@ nav{
   background:rgba(255,255,255,0.06);
   border:1px solid rgba(255,255,255,0.15);
   border-radius:16px;padding:2.5rem;
+  position:relative;
+}
+.form-honey{
+  position:absolute;left:-9999px;width:1px;height:1px;
+  opacity:0;pointer-events:none;
 }
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 .form-group{margin-bottom:1.25rem}
@@ -478,7 +483,8 @@ nav{
   cursor:pointer;transition:background 0.2s,transform 0.1s;
   display:flex;align-items:center;justify-content:center;gap:0.5rem;
 }
-.form-submit:hover{background:#e06c00;transform:translateY(-1px)}
+.form-submit:hover:not(:disabled){background:#e06c00;transform:translateY(-1px)}
+.form-submit:disabled{opacity:0.85;cursor:wait;transform:none}
 .form-submit::after{content:'→'}
 
 /* FOOTER */

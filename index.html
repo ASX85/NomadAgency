@@ -470,45 +470,46 @@
       </div>
     </div>
   </div>
-  <div class="contact-form">
+  <form class="contact-form" id="contact-form" novalidate>
+    <input type="text" name="_honey" class="form-honey" tabindex="-1" autocomplete="off" aria-hidden="true">
     <div class="form-row">
       <div class="form-group">
-        <label>First Name</label>
-        <input type="text" placeholder="John">
+        <label for="first_name">First Name</label>
+        <input type="text" id="first_name" name="first_name" placeholder="John" required>
       </div>
       <div class="form-group">
-        <label>Last Name</label>
-        <input type="text" placeholder="Smith">
+        <label for="last_name">Last Name</label>
+        <input type="text" id="last_name" name="last_name" placeholder="Smith" required>
       </div>
     </div>
     <div class="form-group">
-      <label>Business Name</label>
-      <input type="text" placeholder="Smith's Plumbing Ltd">
+      <label for="business">Business Name</label>
+      <input type="text" id="business" name="business" placeholder="Smith's Plumbing Ltd" required>
     </div>
     <div class="form-group">
-      <label>Email</label>
-      <input type="email" placeholder="john@smithsplumbing.co.uk">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" placeholder="john@smithsplumbing.co.uk" required>
     </div>
     <div class="form-group">
-      <label>Phone</label>
-      <input type="tel" placeholder="07XXX XXX XXX">
+      <label for="phone">Phone</label>
+      <input type="tel" id="phone" name="phone" placeholder="07XXX XXX XXX">
     </div>
     <div class="form-group">
-      <label>I'm interested in</label>
-      <select>
-        <option>Just the free audit for now</option>
-        <option>Foundation — £599 one-off</option>
-        <option>Growth — £999 one-off</option>
-        <option>Authority — £1,799 one-off</option>
-        <option>Monthly growth plan (post-project)</option>
+      <label for="package">I'm interested in</label>
+      <select id="package" name="package" required>
+        <option value="Free audit">Just the free audit for now</option>
+        <option value="Foundation — £599">Foundation — £599 one-off</option>
+        <option value="Growth — £999">Growth — £999 one-off</option>
+        <option value="Authority — £1,799">Authority — £1,799 one-off</option>
+        <option value="Monthly growth plan">Monthly growth plan (post-project)</option>
       </select>
     </div>
     <div class="form-group">
-      <label>Anything else? (optional)</label>
-      <textarea placeholder="Tell us a bit about your business and what you're trying to achieve..."></textarea>
+      <label for="message">Anything else? (optional)</label>
+      <textarea id="message" name="message" placeholder="Tell us a bit about your business and what you're trying to achieve..."></textarea>
     </div>
-    <button class="form-submit">Send My Free Audit Request</button>
-  </div>
+    <button type="submit" class="form-submit">Send My Free Audit Request</button>
+  </form>
 </section>
 
 </main>
@@ -580,12 +581,52 @@ document.querySelectorAll('.problem-card,.step,.price-card,.result-stat,.faq-ite
   observer.observe(el);
 });
 
-// Form submit
-document.querySelector('.form-submit').addEventListener('click',e=>{
+// Contact form → hello@nomadagency.co.uk via FormSubmit
+const contactForm=document.getElementById('contact-form');
+const submitBtn=contactForm.querySelector('.form-submit');
+
+contactForm.addEventListener('submit',async e=>{
   e.preventDefault();
-  e.target.textContent='✓ Request sent — we\'ll be in touch!';
-  e.target.style.background='#1a7a3a';
-  e.target.style.cursor='default';
+  if(submitBtn.disabled)return;
+  if(contactForm._honey.value)return;
+
+  const payload={
+    _subject:'New Nomad Agency enquiry',
+    _template:'table',
+    _captcha:'false',
+    first_name:contactForm.first_name.value.trim(),
+    last_name:contactForm.last_name.value.trim(),
+    business:contactForm.business.value.trim(),
+    email:contactForm.email.value.trim(),
+    phone:contactForm.phone.value.trim()||'(not provided)',
+    package:contactForm.package.value,
+    message:contactForm.message.value.trim()||'(none)',
+  };
+
+  const originalText=submitBtn.textContent;
+  submitBtn.textContent='Sending...';
+  submitBtn.disabled=true;
+
+  try{
+    const res=await fetch('https://formsubmit.co/ajax/hello@nomadagency.co.uk',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify(payload),
+    });
+    if(!res.ok)throw new Error('submit failed');
+    submitBtn.textContent='✓ Request sent — we\'ll be in touch!';
+    submitBtn.style.background='#1a7a3a';
+    submitBtn.style.cursor='default';
+    contactForm.reset();
+  }catch{
+    submitBtn.textContent='Something went wrong — try again';
+    submitBtn.style.background='#c0392b';
+    submitBtn.disabled=false;
+    setTimeout(()=>{
+      submitBtn.textContent=originalText;
+      submitBtn.style.background='';
+    },4000);
+  }
 });
 </script>
 </body>
