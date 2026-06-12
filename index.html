@@ -470,24 +470,24 @@
       </div>
     </div>
   </div>
-  <form class="contact-form" id="contact-form" novalidate>
+  <form class="contact-form" id="contact-form">
     <input type="text" name="_honey" class="form-honey" tabindex="-1" autocomplete="off" aria-hidden="true">
     <div class="form-row">
       <div class="form-group">
-        <label for="first_name">First Name</label>
+        <label for="first_name">First Name <span class="req">*</span></label>
         <input type="text" id="first_name" name="first_name" placeholder="John" required>
       </div>
       <div class="form-group">
-        <label for="last_name">Last Name</label>
+        <label for="last_name">Last Name <span class="req">*</span></label>
         <input type="text" id="last_name" name="last_name" placeholder="Smith" required>
       </div>
     </div>
     <div class="form-group">
-      <label for="business">Business Name</label>
+      <label for="business">Business Name <span class="req">*</span></label>
       <input type="text" id="business" name="business" placeholder="Smith's Plumbing Ltd" required>
     </div>
     <div class="form-group">
-      <label for="email">Email</label>
+      <label for="email">Email <span class="req">*</span></label>
       <input type="email" id="email" name="email" placeholder="john@smithsplumbing.co.uk" required>
     </div>
     <div class="form-group">
@@ -495,7 +495,7 @@
       <input type="tel" id="phone" name="phone" placeholder="07XXX XXX XXX">
     </div>
     <div class="form-group">
-      <label for="package">I'm interested in</label>
+      <label for="package">I'm interested in <span class="req">*</span></label>
       <select id="package" name="package" required>
         <option value="Free audit">Just the free audit for now</option>
         <option value="Foundation — £599">Foundation — £599 one-off</option>
@@ -584,11 +584,37 @@ document.querySelectorAll('.problem-card,.step,.price-card,.result-stat,.faq-ite
 // Contact form → hello@nomadagency.co.uk via FormSubmit
 const contactForm=document.getElementById('contact-form');
 const submitBtn=contactForm.querySelector('.form-submit');
+const requiredFields=['first_name','last_name','business','email'];
+
+function validateContactForm(){
+  let ok=true;
+  requiredFields.forEach(name=>{
+    const field=contactForm[name];
+    if(!field.value.trim()){
+      field.setCustomValidity('Please fill in this field.');
+      ok=false;
+    }else{
+      field.setCustomValidity('');
+    }
+  });
+  if(!contactForm.checkValidity()){
+    contactForm.reportValidity();
+    return false;
+  }
+  return ok;
+}
+
+requiredFields.forEach(name=>{
+  contactForm[name].addEventListener('input',()=>{
+    contactForm[name].setCustomValidity('');
+  });
+});
 
 contactForm.addEventListener('submit',async e=>{
   e.preventDefault();
   if(submitBtn.disabled)return;
   if(contactForm._honey.value)return;
+  if(!validateContactForm())return;
 
   const payload={
     _subject:'New Nomad Agency enquiry',

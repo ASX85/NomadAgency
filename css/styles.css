@@ -454,6 +454,7 @@ nav{
   color:rgba(255,255,255,0.65);margin-bottom:0.4rem;
   letter-spacing:0.03em;text-transform:uppercase;
 }
+.form-group label .req{color:var(--orange);font-weight:700}
 .form-group input,
 .form-group select,
 .form-group textarea{
@@ -473,6 +474,11 @@ nav{
 .form-group textarea:focus{
   border-color:rgba(255,255,255,0.4);
   background:rgba(255,255,255,0.12);
+}
+.form-group input:user-invalid,
+.form-group select:user-invalid,
+.form-group textarea:user-invalid{
+  border-color:rgba(231,76,60,0.75);
 }
 .form-group textarea{min-height:100px;resize:vertical}
 .form-submit{
