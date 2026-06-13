@@ -432,6 +432,11 @@ nav{
   display:flex;align-items:center;gap:0.875rem;
   color:rgba(255,255,255,0.8);font-size:0.9375rem;
 }
+.contact-item a{
+  color:inherit;text-decoration:none;
+  transition:color 0.2s;
+}
+.contact-item a:hover{color:#fff}
 .contact-icon{
   width:36px;height:36px;background:rgba(255,255,255,0.1);
   border-radius:8px;display:flex;align-items:center;justify-content:center;
