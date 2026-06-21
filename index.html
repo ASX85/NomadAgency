@@ -167,18 +167,25 @@
 <body>
 
 <!-- NAV -->
-<nav role="navigation" aria-label="Main navigation">
-  <a href="#" class="nav-logo" aria-label="Nomad Agency home">
+<div class="site-nav-bar" id="site-nav">
+  <a href="/" class="nav-logo" aria-label="Nomad Agency home">
     <img src="assets/logo.svg" alt="Nomad Agency" width="130" height="73">
   </a>
-  <div class="nav-links">
-    <a href="#services">Services</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#results">Results</a>
-    <a href="#contact">Contact</a>
+  <div class="nav-menu" id="nav-menu" role="navigation" aria-label="Main navigation">
+    <div class="nav-links">
+      <a href="#services">Services</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#results">Results</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <a href="#contact" class="nav-cta">Get Free Audit</a>
   </div>
-  <a href="#contact" class="nav-cta">Get Free Audit</a>
-</nav>
+  <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
+    <span class="nav-toggle-bar" aria-hidden="true"></span>
+    <span class="nav-toggle-bar" aria-hidden="true"></span>
+    <span class="nav-toggle-bar" aria-hidden="true"></span>
+  </button>
+</div>
 
 <main>
 <!-- HERO -->
@@ -667,5 +674,6 @@ contactForm.addEventListener('submit',async e=>{
   }
 });
 </script>
+<script src="js/nav.js"></script>
 </body>
 </html>

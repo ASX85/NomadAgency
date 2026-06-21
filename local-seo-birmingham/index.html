@@ -124,18 +124,25 @@
 </head>
 <body>
 
-<nav role="navigation" aria-label="Main navigation">
+<div class="site-nav-bar" id="site-nav">
   <a href="/" class="nav-logo" aria-label="Nomad Agency home">
     <img src="/assets/logo.svg" alt="Nomad Agency" width="130" height="73">
   </a>
-  <div class="nav-links">
-    <a href="/local-seo-birmingham/">Local SEO</a>
-    <a href="/google-business-profile-birmingham/">Google Business Profile</a>
-    <a href="/#pricing">Pricing</a>
-    <a href="/#contact">Contact</a>
+  <div class="nav-menu" id="nav-menu" role="navigation" aria-label="Main navigation">
+    <div class="nav-links">
+      <a href="/local-seo-birmingham/">Local SEO</a>
+      <a href="/google-business-profile-birmingham/">Google Business Profile</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#contact">Contact</a>
+    </div>
+    <a href="/#contact" class="nav-cta">Get Free Audit</a>
   </div>
-  <a href="/#contact" class="nav-cta">Get Free Audit</a>
-</nav>
+  <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
+    <span class="nav-toggle-bar" aria-hidden="true"></span>
+    <span class="nav-toggle-bar" aria-hidden="true"></span>
+    <span class="nav-toggle-bar" aria-hidden="true"></span>
+  </button>
+</div>
 
 <main>
 <section class="service-hero">
@@ -269,6 +276,43 @@
   </div>
 </section>
 
+<section class="lead-magnet" id="gbp-checklist">
+  <div class="lead-magnet-grid">
+    <div class="lead-magnet-copy">
+      <div class="section-label">Free Download</div>
+      <h2>Google Business Profile setup checklist</h2>
+      <p>Most Birmingham businesses leave easy Map Pack wins on the table. This checklist walks you through every field that affects visibility, calls, and reviews — whether you DIY it or hand it to us.</p>
+      <ul class="lead-magnet-points">
+        <li>Category and service setup that matches how people search</li>
+        <li>Photo, post, and review checklist used on client profiles</li>
+        <li>Common GBP mistakes that keep businesses off the Map Pack</li>
+      </ul>
+      <a href="/google-business-profile-birmingham/" class="lead-magnet-gbp-link">Prefer us to handle it? See our GBP service →</a>
+    </div>
+    <div class="lead-magnet-form-wrap">
+      <div id="lead-magnet-form-panel">
+        <h3>Get the free checklist</h3>
+        <p>Enter your email and we'll send you the PDF instantly.</p>
+        <form class="lead-magnet-form" id="lead-magnet-form">
+          <input type="text" name="_honey" class="form-honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="form-group">
+            <label for="lead_email">Email address</label>
+            <input type="email" id="lead_email" name="email" placeholder="you@yourbusiness.co.uk" required>
+          </div>
+          <button type="submit" class="lead-magnet-submit">Send me the checklist</button>
+          <p class="lead-magnet-fine">No spam. Unsubscribe any time. We only email about local SEO and GBP tips.</p>
+        </form>
+      </div>
+      <div class="lead-magnet-success" id="lead-magnet-success" aria-live="polite">
+        <div class="success-icon">✓</div>
+        <h3>Your checklist is ready</h3>
+        <p>Download started automatically. If it didn't, use the button below. We've also saved your email so we can follow up if you want help implementing it.</p>
+        <a href="/assets/google-business-profile-setup-checklist.pdf" class="lead-magnet-download" id="lead-magnet-download" download>Download checklist (PDF)</a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="service-cta">
   <h2>Find out where you stand on Google today.</h2>
   <p>Free audit. Plain-English report within 24 hours. No call required, no commitment.</p>
@@ -316,7 +360,7 @@
 </footer>
 
 <script>
-document.querySelectorAll('.service-feature-card,.service-callout,.faq-item,.service-areas').forEach((el,i)=>{
+document.querySelectorAll('.service-feature-card,.service-callout,.faq-item,.service-areas,.lead-magnet-grid').forEach((el,i)=>{
   el.style.opacity='0';
   el.style.transform='translateY(16px)';
   el.style.transition=`opacity 0.5s ease ${i%6*0.08}s, transform 0.5s ease ${i%6*0.08}s`;
@@ -329,7 +373,71 @@ const fadeObserver=new IntersectionObserver(entries=>{
     }
   });
 },{threshold:0.12});
-document.querySelectorAll('.service-feature-card,.service-callout,.faq-item,.service-areas').forEach(el=>fadeObserver.observe(el));
+document.querySelectorAll('.service-feature-card,.service-callout,.faq-item,.service-areas,.lead-magnet-grid').forEach(el=>fadeObserver.observe(el));
+
+// GBP checklist lead magnet
+const CHECKLIST_PDF='/assets/google-business-profile-setup-checklist.pdf';
+const leadForm=document.getElementById('lead-magnet-form');
+const leadFormPanel=document.getElementById('lead-magnet-form-panel');
+const leadSuccess=document.getElementById('lead-magnet-success');
+const leadDownload=document.getElementById('lead-magnet-download');
+const leadSubmit=leadForm.querySelector('.lead-magnet-submit');
+
+function triggerChecklistDownload(){
+  const link=document.createElement('a');
+  link.href=CHECKLIST_PDF;
+  link.download='';
+  link.rel='noopener';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+leadForm.addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(leadSubmit.disabled)return;
+  if(leadForm._honey.value)return;
+
+  const email=leadForm.email.value.trim();
+  if(!email){
+    leadForm.email.setCustomValidity('Please enter your email address.');
+    leadForm.reportValidity();
+    return;
+  }
+  leadForm.email.setCustomValidity('');
+
+  const payload={
+    _subject:'GBP Checklist download — Local SEO page',
+    _template:'table',
+    _captcha:'false',
+    email,
+    source:'local-seo-birmingham lead magnet',
+    _autoresponse:`Thanks for downloading the Nomad Agency Google Business Profile Setup Checklist.\n\nDownload it here: https://www.nomadagency.co.uk${CHECKLIST_PDF}\n\nWant us to set it up for you? https://www.nomadagency.co.uk/google-business-profile-birmingham/`,
+  };
+
+  const originalText=leadSubmit.textContent;
+  leadSubmit.textContent='Sending...';
+  leadSubmit.disabled=true;
+
+  try{
+    const res=await fetch('https://formsubmit.co/ajax/hello@nomadagency.co.uk',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify(payload),
+    });
+    if(!res.ok)throw new Error('submit failed');
+    leadFormPanel.style.display='none';
+    leadSuccess.classList.add('is-visible');
+    triggerChecklistDownload();
+  }catch{
+    leadSubmit.textContent=originalText;
+    leadSubmit.disabled=false;
+    alert('Something went wrong. Please try again or email hello@nomadagency.co.uk');
+  }
+});
+
+leadForm.email.addEventListener('input',()=>leadForm.email.setCustomValidity(''));
 </script>
+<script src="/js/nav.js"></script>
 </body>
 </html>
