@@ -4,11 +4,44 @@
   const sugg = $('sugg');
   const status = $('status');
   let debounceTimer;
+  let stageTimer;
+
+  // Inject loading-state styles so no HTML/CSS edits are needed
+  const style = document.createElement('style');
+  style.textContent = `
+    .status { display: flex; align-items: center; gap: 10px; }
+    .spinner {
+      width: 18px; height: 18px; flex-shrink: 0;
+      border: 2.5px solid rgba(255,255,255,0.25);
+      border-top-color: #f08a2e;
+      border-radius: 50%;
+      animation: auditspin 0.8s linear infinite;
+    }
+    @keyframes auditspin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .spinner { animation-duration: 1.6s; }
+    }
+    .status .msg { transition: opacity 0.25s ease; }
+    .status .msg.swap { opacity: 0; }
+    input.auditing { opacity: 0.6; pointer-events: none; }
+  `;
+  document.head.appendChild(style);
+
+  const STAGES = [
+    'Pulling your profile from Google\u2026',
+    'Finding the businesses ranking near you\u2026',
+    'Scoring 10 local ranking factors\u2026',
+    'Writing your report\u2026',
+  ];
 
   input.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     const q = input.value.trim();
-    if (q.length < 3) return closeSuggestions();
+    if (q.length < 3) {
+      setStatus('');
+      return closeSuggestions();
+    }
+    setStatus('Searching\u2026', true);
     debounceTimer = setTimeout(() => searchPlaces(q), 300);
   });
 
@@ -20,14 +53,19 @@
     try {
       const res = await fetch(`/api/place-search?q=${encodeURIComponent(q)}`);
       const data = await res.json();
+      setStatus('');
       renderSuggestions(data.suggestions || []);
     } catch {
+      setStatus('');
       closeSuggestions();
     }
   }
 
   function renderSuggestions(list) {
-    if (!list.length) return closeSuggestions();
+    if (!list.length) {
+      setStatus('No matches found. Try adding your area, e.g. "3 Bros Stechford".');
+      return closeSuggestions();
+    }
     sugg.innerHTML = '';
     list.forEach((s) => {
       const b = document.createElement('button');
@@ -49,17 +87,49 @@
     sugg.innerHTML = '';
   }
 
+  // status helpers -----------------------------------------------------------
+  function setStatus(text, withSpinner = false) {
+    clearInterval(stageTimer);
+    if (!text) {
+      status.innerHTML = '';
+      return;
+    }
+    status.innerHTML = `${withSpinner ? '<span class="spinner" aria-hidden="true"></span>' : ''}<span class="msg">${escapeHtml(text)}</span>`;
+    status.setAttribute('role', 'status');
+    status.setAttribute('aria-live', 'polite');
+  }
+
+  function startStagedStatus() {
+    let i = 0;
+    setStatus(STAGES[0], true);
+    stageTimer = setInterval(() => {
+      i += 1;
+      if (i >= STAGES.length) return clearInterval(stageTimer); // hold last stage
+      const msg = status.querySelector('.msg');
+      if (!msg) return;
+      msg.classList.add('swap');
+      setTimeout(() => {
+        msg.textContent = STAGES[i];
+        msg.classList.remove('swap');
+      }, 250);
+    }, 2200);
+  }
+
+  // audit --------------------------------------------------------------------
   async function runAudit(placeId) {
-    status.textContent = 'Auditing your profile against Google\u2019s live data\u2026';
     $('report').style.display = 'none';
+    input.classList.add('auditing');
+    startStagedStatus();
     try {
       const res = await fetch(`/api/audit?placeId=${encodeURIComponent(placeId)}`);
       if (!res.ok) throw new Error('Audit failed');
       const data = await res.json();
       renderReport(data);
-      status.textContent = '';
+      setStatus('');
     } catch {
-      status.textContent = 'Something went wrong loading that business. Try again, or pick a different result.';
+      setStatus('Something went wrong loading that business. Try again, or pick a different result.');
+    } finally {
+      input.classList.remove('auditing');
     }
   }
 
@@ -123,6 +193,9 @@
   $('gateForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
+    const btn = form.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Unlocking\u2026';
     const body = new URLSearchParams(new FormData(form)).toString();
     try {
       await fetch('/', {
