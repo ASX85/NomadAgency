@@ -1,9 +1,6 @@
 // GET /api/audit?placeId=ChIJ...
-// 1. Pull Place Details for the business
-// 2. Pull top competitors in the same category nearby
-// 3. Run the deterministic scoring engine
-// 4. Ask Claude for the plain-English narrative
-// Total external cost per audit: ~2 Places calls + 1 small Claude call.
+// Original text-search competitor logic + confidence gate:
+// the comparison table is only returned when we're sure it's right.
 
 import { scorePlace, compareCompetitors } from './lib/scoring.mjs';
 import { buildNarrative } from './lib/narrative.mjs';
@@ -29,13 +26,31 @@ const DETAILS_FIELDS = [
   'googleMapsUri',
 ].join(',');
 
+// places.types added so we can verify each competitor actually overlaps
 const COMPETITOR_FIELDS = [
   'places.id',
   'places.displayName',
   'places.rating',
   'places.userRatingCount',
   'places.photos',
+  'places.types',
 ].join(',');
+
+// Buckets too vague to define a market
+const GENERIC_TYPES = new Set([
+  'point_of_interest',
+  'establishment',
+  'store',
+  'food',
+  'health',
+  'finance',
+  'education',
+  'school',
+  'place_of_worship',
+  'general_contractor',
+]);
+
+const specificTypes = (types) => (types || []).filter((t) => t && !GENERIC_TYPES.has(t));
 
 export default async (req) => {
   const url = new URL(req.url);
@@ -58,7 +73,8 @@ export default async (req) => {
     }
     const place = await detailsRes.json();
 
-    // 2. Competitors: same category near the business location
+    // 2. Competitors — original approach: text search on the category label,
+    //    biased to the business's area
     let competitors = [];
     const category = place.primaryTypeDisplayName?.text;
     const loc = place.location;
@@ -73,25 +89,48 @@ export default async (req) => {
           },
           body: JSON.stringify({
             textQuery: category,
-            pageSize: 5,
+            pageSize: 8,
             locationBias: {
               circle: { center: { latitude: loc.latitude, longitude: loc.longitude }, radius: 5000 },
             },
           }),
         });
-        if (compRes.ok) {
-          competitors = (await compRes.json()).places || [];
-        }
+        if (compRes.ok) competitors = (await compRes.json()).places || [];
       } catch (err) {
         console.error('Competitor search failed (non-fatal):', err.message);
       }
     }
 
-    // 3. Deterministic score
-    const result = scorePlace(place);
-    const comparison = compareCompetitors(place, competitors);
+    // --- Confidence gate ----------------------------------------------------
+    // Only show the comparison when all three hold:
+    //  a) the business's own primary category is specific (not a generic bucket)
+    //  b) each competitor shares >=1 specific type with the business
+    //  c) at least 2 genuine competitors survive the filter
+    const ownSpecific = new Set(specificTypes([place.primaryType, ...(place.types || [])]));
+    const hasSpecificCategory = ownSpecific.size > 0 && place.primaryType && !GENERIC_TYPES.has(place.primaryType);
 
-    // 4. AI narrative (falls back gracefully if the API key is absent or the call fails)
+    let vetted = [];
+    if (hasSpecificCategory) {
+      vetted = competitors
+        .filter((c) => c.id !== place.id)
+        .filter((c) => specificTypes(c.types).some((t) => ownSpecific.has(t)));
+    }
+    const confident = hasSpecificCategory && vetted.length >= 2;
+
+    if (!confident && competitors.length) {
+      console.log(
+        `Comparison suppressed for "${place.displayName?.text}" (${place.primaryType || 'no type'}): ` +
+        `${vetted.length} vetted of ${competitors.length} found`
+      );
+    }
+
+    // 3. Deterministic score (unchanged, always shown)
+    const result = scorePlace(place);
+    const comparison = confident
+      ? { ...compareCompetitors(place, vetted), confident: true }
+      : { ...compareCompetitors(place, []), confident: false }; // self row only -> frontend hides card
+
+    // 4. Narrative — never mention rivals we didn't show
     const narrative = await buildNarrative({ place, result, comparison });
 
     return json({

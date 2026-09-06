@@ -12,14 +12,16 @@ export async function buildNarrative({ place, result, comparison }) {
   const businessName = place.displayName?.text || 'this business';
   const category = place.primaryTypeDisplayName?.text || 'local business';
 
+  const showComparison = comparison.confident !== false && (comparison.rows || []).length > 1;
   const facts = {
     businessName,
     category,
     score: result.score,
     grade: result.grade,
     topIssues: result.issues.slice(0, 5),
-    competitorTable: comparison.rows,
-    reviewGapToLocalLeader: comparison.reviewGap,
+    ...(showComparison
+      ? { competitorTable: comparison.rows, reviewGapToLocalLeader: comparison.reviewGap }
+      : { note: 'No competitor comparison available for this audit. Do not mention competitors, rivals, or review gaps at all.' }),
   };
 
   const prompt = `You are a UK local SEO specialist writing the summary section of a Google Business Profile audit for a small business owner in the West Midlands. They are not technical. Be direct, specific and encouraging, never salesy or jargon-heavy. Use British English. Do not use em dashes. Do not use the word "however".
@@ -78,8 +80,10 @@ function fallbackNarrative(result, comparison) {
         : 'Your profile has significant gaps that are costing you visibility in Google search and Maps. The fixes below are where to start.',
     topFixes: worst.map((i) => `${i.area}: ${i.detail}`),
     aiVisibilityNote:
-      comparison.reviewGap > 0
-        ? `The local leader in your category has ${comparison.reviewGap} more reviews than you, and review volume is the strongest signal AI assistants use when recommending businesses.`
-        : 'Your review position is competitive locally, which supports visibility in both Google and AI assistant recommendations.',
+      comparison.confident === false || (comparison.rows || []).length <= 1
+        ? 'Review volume, completeness and photos are the signals AI assistants like ChatGPT and Gemini lean on when recommending businesses, so every gap above also affects whether AI search surfaces you.'
+        : comparison.reviewGap > 0
+          ? `The local leader in your category has ${comparison.reviewGap} more reviews than you, and review volume is the strongest signal AI assistants use when recommending businesses.`
+          : 'Your review position is competitive locally, which supports visibility in both Google and AI assistant recommendations.',
   };
 }
