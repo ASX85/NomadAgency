@@ -36,21 +36,39 @@ const COMPETITOR_FIELDS = [
   'places.types',
 ].join(',');
 
-// Buckets too vague to define a market
-const GENERIC_TYPES = new Set([
-  'point_of_interest',
-  'establishment',
-  'store',
-  'food',
-  'health',
-  'finance',
-  'education',
-  'school',
-  'place_of_worship',
-  'general_contractor',
+// WHITELIST: the comparison table only renders for storefront consumer
+// categories where nearby businesses genuinely compete for the same walk-in
+// customer. Everything else (B2B, service-area, unusual categories) shows
+// no table at all. Fails closed: unknown category means no comparison.
+const STOREFRONT_TYPES = new Set([
+  // food & drink
+  'meal_takeaway', 'meal_delivery', 'sandwich_shop', 'cafe', 'coffee_shop',
+  'bakery', 'ice_cream_shop', 'dessert_shop', 'donut_shop', 'tea_house',
+  'bar', 'pub', 'fast_food_restaurant',
+  // personal care
+  'barber_shop', 'hair_salon', 'beauty_salon', 'nail_salon', 'spa',
+  'tanning_studio', 'massage',
+  // health storefronts
+  'dentist', 'dental_clinic', 'pharmacy', 'drugstore', 'optician',
+  'veterinary_care', 'physiotherapist', 'chiropractor',
+  // fitness
+  'gym', 'fitness_center', 'yoga_studio',
+  // auto storefronts
+  'car_repair', 'car_wash', 'tire_shop', 'car_dealer',
+  // retail
+  'florist', 'butcher_shop', 'grocery_store', 'supermarket',
+  'convenience_store', 'clothing_store', 'shoe_store', 'jewelry_store',
+  'book_store', 'pet_store', 'hardware_store', 'furniture_store',
+  'electronics_store', 'cell_phone_store', 'gift_shop', 'toy_store',
+  'bicycle_store', 'liquor_store',
 ]);
 
-const specificTypes = (types) => (types || []).filter((t) => t && !GENERIC_TYPES.has(t));
+// Any cuisine-specific restaurant type counts (indian_restaurant,
+// hamburger_restaurant, turkish_restaurant, ...) plus 'restaurant' itself.
+const isStorefrontType = (t) =>
+  Boolean(t) && (t === 'restaurant' || t.endsWith('_restaurant') || STOREFRONT_TYPES.has(t));
+
+const storefrontTypes = (types) => (types || []).filter(isStorefrontType);
 
 export default async (req) => {
   const url = new URL(req.url);
@@ -101,26 +119,27 @@ export default async (req) => {
       }
     }
 
-    // --- Confidence gate ----------------------------------------------------
-    // Only show the comparison when all three hold:
-    //  a) the business's own primary category is specific (not a generic bucket)
-    //  b) each competitor shares >=1 specific type with the business
+    // --- Whitelist gate -----------------------------------------------------
+    // The table renders only when ALL hold:
+    //  a) the business itself is a whitelisted storefront category
+    //  b) each competitor shares >=1 whitelisted type with the business
     //  c) at least 2 genuine competitors survive the filter
-    const ownSpecific = new Set(specificTypes([place.primaryType, ...(place.types || [])]));
-    const hasSpecificCategory = ownSpecific.size > 0 && place.primaryType && !GENERIC_TYPES.has(place.primaryType);
+    // Anything not on the whitelist fails closed: no table, no mention.
+    const ownStorefront = new Set(storefrontTypes([place.primaryType, ...(place.types || [])]));
+    const isStorefrontBusiness = ownStorefront.size > 0;
 
     let vetted = [];
-    if (hasSpecificCategory) {
+    if (isStorefrontBusiness) {
       vetted = competitors
         .filter((c) => c.id !== place.id)
-        .filter((c) => specificTypes(c.types).some((t) => ownSpecific.has(t)));
+        .filter((c) => storefrontTypes(c.types).some((t) => ownStorefront.has(t)));
     }
-    const confident = hasSpecificCategory && vetted.length >= 2;
+    const confident = isStorefrontBusiness && vetted.length >= 2;
 
     if (!confident && competitors.length) {
       console.log(
         `Comparison suppressed for "${place.displayName?.text}" (${place.primaryType || 'no type'}): ` +
-        `${vetted.length} vetted of ${competitors.length} found`
+        `storefront=${isStorefrontBusiness}, ${vetted.length} vetted of ${competitors.length} found`
       );
     }
 
