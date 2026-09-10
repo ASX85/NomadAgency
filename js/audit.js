@@ -6,7 +6,7 @@
   let debounceTimer;
   let stageTimer;
 
-  // Inject loading-state styles so no HTML/CSS edits are needed
+  // Loading-state styles
   const style = document.createElement('style');
   style.textContent = `
     .status { display: flex; align-items: center; gap: 10px; }
@@ -18,9 +18,7 @@
       animation: auditspin 0.8s linear infinite;
     }
     @keyframes auditspin { to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) {
-      .spinner { animation-duration: 1.6s; }
-    }
+    @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 1.6s; } }
     .status .msg { transition: opacity 0.25s ease; }
     .status .msg.swap { opacity: 0; }
     input.auditing { opacity: 0.6; pointer-events: none; }
@@ -37,10 +35,7 @@
   input.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     const q = input.value.trim();
-    if (q.length < 3) {
-      setStatus('');
-      return closeSuggestions();
-    }
+    if (q.length < 3) { setStatus(''); return closeSuggestions(); }
     setStatus('Searching\u2026', true);
     debounceTimer = setTimeout(() => searchPlaces(q), 300);
   });
@@ -55,10 +50,7 @@
       const data = await res.json();
       setStatus('');
       renderSuggestions(data.suggestions || []);
-    } catch {
-      setStatus('');
-      closeSuggestions();
-    }
+    } catch { setStatus(''); closeSuggestions(); }
   }
 
   function renderSuggestions(list) {
@@ -82,18 +74,11 @@
     sugg.classList.add('open');
   }
 
-  function closeSuggestions() {
-    sugg.classList.remove('open');
-    sugg.innerHTML = '';
-  }
+  function closeSuggestions() { sugg.classList.remove('open'); sugg.innerHTML = ''; }
 
-  // status helpers -----------------------------------------------------------
   function setStatus(text, withSpinner = false) {
     clearInterval(stageTimer);
-    if (!text) {
-      status.innerHTML = '';
-      return;
-    }
+    if (!text) { status.innerHTML = ''; return; }
     status.innerHTML = `${withSpinner ? '<span class="spinner" aria-hidden="true"></span>' : ''}<span class="msg">${escapeHtml(text)}</span>`;
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
@@ -104,18 +89,14 @@
     setStatus(STAGES[0], true);
     stageTimer = setInterval(() => {
       i += 1;
-      if (i >= STAGES.length) return clearInterval(stageTimer); // hold last stage
+      if (i >= STAGES.length) return clearInterval(stageTimer);
       const msg = status.querySelector('.msg');
       if (!msg) return;
       msg.classList.add('swap');
-      setTimeout(() => {
-        msg.textContent = STAGES[i];
-        msg.classList.remove('swap');
-      }, 250);
+      setTimeout(() => { msg.textContent = STAGES[i]; msg.classList.remove('swap'); }, 250);
     }, 2200);
   }
 
-  // audit --------------------------------------------------------------------
   async function runAudit(placeId) {
     $('report').style.display = 'none';
     input.classList.add('auditing');
@@ -133,53 +114,63 @@
     }
   }
 
+  // ---------- report rendering ----------
+
+  const gradeColor = (score) => (score >= 70 ? '#7ee2a8' : score >= 40 ? '#f08a2e' : '#e05656');
+
   function renderReport(d) {
-    // Score dial
-    $('dial').style.setProperty('--pct', d.score);
-    $('scoreNum').textContent = d.score;
+    // Hero: dial colour by band, animated sweep + count-up
+    const dial = $('dial');
+    dial.style.setProperty('--dialc', gradeColor(d.score));
     $('gradeTxt').textContent = `Grade ${d.grade}`;
     $('headline').textContent = d.narrative.headline;
     $('summaryTxt').textContent = d.narrative.summary;
-    $('bizmeta').textContent = [d.business.name, d.business.category, d.business.address]
-      .filter(Boolean)
-      .join(' \u00b7 ');
+    $('bizmeta').textContent = [d.business.name, d.business.category, d.business.address].filter(Boolean).join(' \u00b7 ');
 
-    // Competitor table
-    const rows = d.comparison.rows || [];
+    const gain = 100 - d.score;
+    if (gain >= 10) { $('gainNum').textContent = `+${gain}`; $('gainChip').hidden = false; }
+    else { $('gainChip').hidden = true; }
+
+    // What's costing you: failing checks with minus-points badges
+    const failing = d.breakdown.filter((b) => b.earned < b.max)
+      .sort((a, b) => (b.max - b.earned) - (a.max - a.earned));
+    if (failing.length) {
+      $('costList').innerHTML = failing.map((b) =>
+        `<div class="cost-row"><span class="pts">-${b.max - b.earned}</span>` +
+        `<div><div class="what">${escapeHtml(b.label)}</div><div class="why">${escapeHtml(b.detail)}</div></div></div>`
+      ).join('');
+      $('costCard').style.display = '';
+    } else { $('costCard').style.display = 'none'; }
+
+    // What's working: passing checks as chips, no explanations needed
+    const passing = d.breakdown.filter((b) => b.earned === b.max && b.max > 0);
+    if (passing.length) {
+      $('workList').innerHTML = passing.map((b) => `<span class="chip">${escapeHtml(b.label)}</span>`).join('');
+      $('workCard').style.display = '';
+    } else { $('workCard').style.display = 'none'; }
+
+    // Competitor review bars
+    const rows = (d.comparison && d.comparison.rows) || [];
     if (rows.length > 1) {
-      $('compTable').innerHTML =
-        '<tr><th>Business</th><th>Rating</th><th>Reviews</th><th>Photos</th></tr>' +
-        rows
-          .map(
-            (r) =>
-              `<tr class="${r.isSelf ? 'self' : ''}"><td>${escapeHtml(r.name)}${r.isSelf ? ' (you)' : ''}</td>` +
-              `<td>${r.rating ? r.rating.toFixed(1) : '\u2014'}</td><td>${r.reviews}</td><td>${r.photos >= 10 ? '10+' : r.photos}</td></tr>`
-          )
-          .join('');
+      const maxReviews = Math.max(...rows.map((r) => r.reviews), 1);
+      $('compRows').innerHTML = rows.map((r) => {
+        const pct = Math.max(4, Math.round((r.reviews / maxReviews) * 100));
+        const meta = `${r.rating ? r.rating.toFixed(1) + '\u2605' : 'no rating'} \u00b7 ${r.photos >= 10 ? '10+' : r.photos} photos`;
+        return `<div class="v-row ${r.isSelf ? 'self' : ''}">` +
+          `<div class="v-top"><span class="v-name">${escapeHtml(r.name)}${r.isSelf ? ' (you)' : ''}</span><span class="v-meta">${meta}</span></div>` +
+          `<div class="v-bar"><i data-w="${pct}"></i><b>${r.reviews}</b></div></div>`;
+      }).join('');
       $('compCard').style.display = '';
-    } else {
-      $('compCard').style.display = 'none';
-    }
+    } else { $('compCard').style.display = 'none'; }
 
-    // Breakdown bars
-    $('breakdown').innerHTML = d.breakdown
-      .map((b) => {
-        const pct = Math.round((b.earned / b.max) * 100);
-        return `<div class="brk"><div class="row"><span>${escapeHtml(b.label)}</span><span>${b.earned}/${b.max}</span></div>` +
-          `<div class="bar ${pct < 50 ? 'low' : ''}"><i style="width:${pct}%"></i></div>` +
-          `<p class="detail">${escapeHtml(b.detail)}</p></div>`;
-      })
-      .join('');
-
-    // Fix list (gated)
+    // Priority fixes: numbered rows (priority order is a real sequence)
     $('fixlist').innerHTML = d.narrative.topFixes
       .concat(d.issues.slice(3, 8).map((i) => `${i.area}: ${i.detail}`))
-      .map((f) => `<li>${escapeHtml(f)}</li>`)
+      .map((f, i) => `<li><span class="n">${i + 1}</span><span>${escapeHtml(f)}</span></li>`)
       .join('');
     $('leadBusiness').value = d.business.name || '';
     $('leadScore').value = String(d.score);
 
-    // Manual audit items
     $('manualList').innerHTML = d.manualCheckItems.map((m) => `<li>${escapeHtml(m)}</li>`).join('');
     $('ainote').textContent = d.narrative.aiVisibilityNote;
 
@@ -187,9 +178,42 @@
     report.style.display = 'block';
     report.classList.add('show');
     report.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    animateResult(d.score);
   }
 
-  // Email gate: submit to Netlify Forms, then unlock
+  // One orchestrated reveal: dial sweeps + score counts up, then bars grow
+  function animateResult(score) {
+    const dial = $('dial');
+    const num = $('scoreNum');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduced) {
+      dial.style.setProperty('--pct', score);
+      num.textContent = score;
+    } else {
+      const t0 = performance.now();
+      const dur = 900;
+      const ease = (t) => 1 - Math.pow(1 - t, 3);
+      const tick = (now) => {
+        const p = Math.min(1, (now - t0) / dur);
+        const v = Math.round(ease(p) * score);
+        dial.style.setProperty('--pct', v);
+        num.textContent = v;
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(() => {
+      document.querySelectorAll('#compRows .v-bar > i').forEach((el) => {
+        el.style.width = reduced ? el.dataset.w + '%' : '0%';
+        if (!reduced) requestAnimationFrame(() => { el.style.width = el.dataset.w + '%'; });
+      });
+    });
+  }
+
+  // Email gate
   $('gateForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -198,14 +222,8 @@
     btn.textContent = 'Unlocking\u2026';
     const body = new URLSearchParams(new FormData(form)).toString();
     try {
-      await fetch('/', {
-        method: 'POST',
-        headers: { 'content-type': 'application/x-www-form-urlencoded' },
-        body,
-      });
-    } catch {
-      // Unlock anyway — never punish the user for our form failing
-    }
+      await fetch('/', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body });
+    } catch { /* unlock anyway */ }
     $('fixCard').classList.remove('locked');
     $('gate').remove();
   });
